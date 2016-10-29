@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,13 +12,18 @@ import java.util.Locale;
  * Created by Richik SC on 10/1/2016 for MechaTech Robotics.
  */
 
-@TeleOp(name = "Omniwheel Robot", group = "Samples")
+@TeleOp(name = "Omniwheel Robot", group = "Comp")
+@Disabled
 public class HolonomicRobot extends OpMode {
 
-  private DcMotor motorFL;
-  private DcMotor motorFR;
-  private DcMotor motorBL;
-  private DcMotor motorBR;
+  protected DcMotor motorFL;
+  protected DcMotor motorFR;
+  protected DcMotor motorBL;
+  protected DcMotor motorBR;
+
+  private float xVal;
+  private float yVal;
+  private float rotVal;
 
   private float frontLeft;
   private float frontRight;
@@ -51,54 +57,12 @@ public class HolonomicRobot extends OpMode {
 
     // Thanks to FTC 4962 - Rockettes for this code.
 
-    // Left stick controls direction
-    // Right stick X controls rotation
+    // Holonomic formulas
 
-    float gamepad1LeftY = -gamepad1.left_stick_y;
-    float gamepad1LeftX = gamepad1.left_stick_x;
-    float gamepad1RightX = gamepad1.right_stick_x;
-
-    if (gamepad1.right_bumper) {
-      if (gamepad1LeftY > 0) {
-        if (gamepad1LeftX < 0) {
-          frontLeft = 0;
-          frontRight = gamepad1LeftY;
-          backRight = 0;
-          backLeft = gamepad1LeftY;
-        } else if (gamepad1LeftX > 0) {
-          frontLeft = -gamepad1LeftY;
-          frontRight = 0;
-          backRight = gamepad1LeftY;
-          backLeft = 0;
-        } else {
-          setPowerZero();
-        }
-      } else if (gamepad1LeftY < 0) {
-        if (gamepad1LeftX < 0) {
-          frontLeft = gamepad1LeftY;
-          frontRight = 0;
-          backRight = -gamepad1LeftY;
-          backLeft = 0;
-        } else if (gamepad1LeftX > 0) {
-          frontLeft = 0;
-          frontRight = gamepad1LeftY;
-          backRight = 0;
-          backLeft = -gamepad1LeftY;
-        } else {
-          setPowerZero();
-        }
-      } else {
-        setPowerZero();
-      }
-    } else {
-      // Holonomic formulas
-
-      frontLeft = -gamepad1LeftY - gamepad1LeftX - gamepad1RightX;
-      frontRight = gamepad1LeftY - gamepad1LeftX - gamepad1RightX;
-      backRight = gamepad1LeftY + gamepad1LeftX - gamepad1RightX;
-      backLeft = -gamepad1LeftY + gamepad1LeftX - gamepad1RightX;
-
-    }
+    frontLeft = -yVal - xVal - rotVal;
+    frontRight = yVal - xVal - rotVal;
+    backRight = yVal + xVal - rotVal;
+    backLeft = -yVal + xVal - rotVal;
 
     // Clip the right/left values so that the values never exceed +/- 1
     frontRight = Range.clip(frontRight, -1, 1);
@@ -130,5 +94,11 @@ public class HolonomicRobot extends OpMode {
     frontRight = 0;
     backLeft = 0;
     backRight = 0;
+  }
+
+  protected void drive(float x, float y, float rotation) {
+    xVal = x;
+    yVal = y;
+    rotVal = rotation;
   }
 }
