@@ -43,10 +43,10 @@ public class HolonomicRobot extends OpMode {
     motorFR.setDirection(DcMotor.Direction.REVERSE);
     motorBR.setDirection(DcMotor.Direction.REVERSE);
 
-    motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
     telemetry.addData("Status", "Initialized");
 

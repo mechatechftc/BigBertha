@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
@@ -36,8 +38,10 @@ public class HolonomicAutonomous extends LinearOpMode {
   int desiredInches;
   int desiredTicks;
 
-  public enum States {
-    ROTATE_45, DRIVE_FORWARD_1, STRAFE_RIGHT_1, DRIVE_FORWARD_2
+  private boolean loopBroken = false;
+
+  public static enum States {
+    ROTATE_45, DRIVE_FORWARD_1, STRAFE_RIGHT_1, DRIVE_FORWARD_2, DONE
   }
 
   private States state;
@@ -47,11 +51,9 @@ public class HolonomicAutonomous extends LinearOpMode {
     motorFR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motorBL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motorBR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    while (motorFL.isBusy()
-        && motorFR.isBusy()
-        && motorBL.isBusy()
-        && motorBR.isBusy()) {
-      sleep(400);
+    if(motorBR.getCurrentPosition() != 0) {
+      telemetry.addLine("Encoders did not reset fully");
+      requestOpModeStop();
     }
     motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -60,7 +62,6 @@ public class HolonomicAutonomous extends LinearOpMode {
 
     desiredInches = 0;
     desiredTicks = 0;
-    state = States.DRIVE_FORWARD_1;
   }
 
   private void setPowerZero() {
@@ -76,7 +77,7 @@ public class HolonomicAutonomous extends LinearOpMode {
     rotVal = rotation;
   }
 
-  private void customInit() {
+  public void custom_init() {
 
     motorFL = hardwareMap.dcMotor.get("motor_fl");
     motorFR = hardwareMap.dcMotor.get("motor_fr");
@@ -93,18 +94,18 @@ public class HolonomicAutonomous extends LinearOpMode {
     motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+    resetEncoders();
+    state = States.DRIVE_FORWARD_1;
+
     telemetry.addData("Status", "Initialized");
-
-
-
   }
 
-  private void customLoop() {
+  public void custom_loop() {
     switch (state) {
       case ROTATE_45:
         telemetry.addLine("Not supported yet - no gyro");
-        sleep(400);
         break;
+
       case DRIVE_FORWARD_1:
         if (desiredTicks == 0) {
           desiredInches = 36;
@@ -118,12 +119,19 @@ public class HolonomicAutonomous extends LinearOpMode {
           desiredTicks = 0;
         }
         break;
+
+      case DONE:
+        telemetry.addLine("DONE!");
+        loopBroken = true;
+
       default:
         telemetry.addLine("You called " + state.toString());
         telemetry.addLine("That method is not supported yet.");
+        loopBroken = true;
+        break;
     }
 
-    telemetry.addLine("DONE!");
+    applyDrive();
 
   }
 
@@ -165,11 +173,13 @@ public class HolonomicAutonomous extends LinearOpMode {
 
   @Override
   public void runOpMode() {
-    customInit();
+    custom_init();
     waitForStart();
-    while (opModeIsActive()) {
-      customLoop();
-      applyDrive();
+    while(opModeIsActive()) {
+      custom_loop();
+      if (loopBroken) {
+        break;
+      }
     }
   }
 
