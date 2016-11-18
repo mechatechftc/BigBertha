@@ -35,7 +35,6 @@ public class HolonomicAutonomous extends LinearOpMode {
   private float backRight;
   private float backLeft;
 
-  int desiredInches;
   int desiredTicks;
 
   private boolean loopBroken = false;
@@ -51,6 +50,7 @@ public class HolonomicAutonomous extends LinearOpMode {
     motorFR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motorBL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motorBR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    idle();
     if(motorBR.getCurrentPosition() != 0) {
       telemetry.addLine("Encoders did not reset fully");
       requestOpModeStop();
@@ -60,7 +60,6 @@ public class HolonomicAutonomous extends LinearOpMode {
     motorBL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorBR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-    desiredInches = 0;
     desiredTicks = 0;
   }
 
@@ -75,6 +74,12 @@ public class HolonomicAutonomous extends LinearOpMode {
     xVal = x;
     yVal = y;
     rotVal = rotation;
+    // Holonomic formulas
+
+    frontLeft = -yVal - xVal - rotVal;
+    frontRight = yVal - xVal - rotVal;
+    backRight = yVal + xVal - rotVal;
+    backLeft = -yVal + xVal - rotVal;
   }
 
   public void custom_init() {
@@ -89,15 +94,20 @@ public class HolonomicAutonomous extends LinearOpMode {
     motorFR.setDirection(DcMotor.Direction.REVERSE);
     motorBR.setDirection(DcMotor.Direction.REVERSE);
 
-    motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
     resetEncoders();
     state = States.DRIVE_FORWARD_1;
 
     telemetry.addData("Status", "Initialized");
+
+  }
+
+  private void calcDesiredTicks(int desiredInches) {
+    desiredTicks = (int) Math.round(desiredInches * PPI);
   }
 
   public void custom_loop() {
@@ -107,31 +117,44 @@ public class HolonomicAutonomous extends LinearOpMode {
         break;
 
       case DRIVE_FORWARD_1:
+        telemetry.addData("State", "DRIVE_FORWARD_1");
         if (desiredTicks == 0) {
-          desiredInches = 36;
-          desiredTicks = (int) Math.round(desiredInches * PPI);
+          calcDesiredTicks(36);
         }
-        if(motorFL.getCurrentPosition() > desiredTicks) {
-          drive(0, 1, 0);
+
+        int motorFLCurrPos = motorFL.getCurrentPosition();
+//        telemetry.addData("Desired Ticks", desiredTicks);
+//        telemetry.addData("Motor FL - Current Position", motorFLCurrPos);
+//        telemetry.addData("Difference", (desiredTicks - motorFLCurrPos));
+        telemetry.addData("moterFL ", motorFL.getCurrentPosition());
+        telemetry.addData("moterFR ", motorFR.getCurrentPosition());
+        telemetry.addData("motorBL ", motorBL.getCurrentPosition());
+        telemetry.addData("motorBR ", motorBR.getCurrentPosition());
+        telemetry.update();
+        //motorFL.get
+        if(motorFLCurrPos < desiredTicks) {
+          drive(1, 1, 0);
         } else {
           resetEncoders();
-          desiredInches = 0;
-          desiredTicks = 0;
+          state = States.DONE;
         }
+        applyDrive();
         break;
 
       case DONE:
-        telemetry.addLine("DONE!");
+        telemetry.addData("State", "DONE");
         loopBroken = true;
+        setPowerZero();
+        break;
 
       default:
-        telemetry.addLine("You called " + state.toString());
-        telemetry.addLine("That method is not supported yet.");
+        telemetry.addData("Message1", "You called " + state.toString());
+        telemetry.addData("Message2", "That method is not supported yet.");
         loopBroken = true;
         break;
     }
 
-    applyDrive();
+    //applyDrive();
 
   }
 
@@ -139,19 +162,12 @@ public class HolonomicAutonomous extends LinearOpMode {
 
     // Thanks to FTC 4962 - Rockettes for this code.
 
-    // Holonomic formulas
-
-    frontLeft = -yVal - xVal - rotVal;
-    frontRight = yVal - xVal - rotVal;
-    backRight = yVal + xVal - rotVal;
-    backLeft = -yVal + xVal - rotVal;
-
     // Clip the right/left values so that the values never exceed +/- 1
     frontRight = Range.clip(frontRight, -1, 1);
     frontLeft = Range.clip(frontLeft, -1, 1);
     backLeft = Range.clip(backLeft, -1, 1);
     backRight = Range.clip(backRight, -1, 1);
-
+/*
     telemetry.addData("Wheel Value Key", "(Front Left, Front Right, Back Left, Back Right)");
     telemetry.addData("Wheel Values (theoretical)",
         String.format(Locale.US, "(%d, %d, %d, %d)",
@@ -160,26 +176,36 @@ public class HolonomicAutonomous extends LinearOpMode {
             (long)backLeft,
             (long)backRight
         )
-    );
-
+    );*/
+    telemetry.update();
     // Write the values to the motors
 
+    motorFL.setTargetPosition(motorFL.getCurrentPosition() + 3000);
+    motorFL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     motorFL.setPower(frontLeft);
     motorFR.setPower(frontRight);
     motorBL.setPower(backLeft);
     motorBR.setPower(backRight);
 
+    idle();
+
   }
 
   @Override
   public void runOpMode() {
+    telemetry.setAutoClear(false);
+  //  telemetry.setMsTransmissionInterval(1000);
+    telemetry.addData("TelemetryTest", "Works!");
+    telemetry.update();
     custom_init();
     waitForStart();
     while(opModeIsActive()) {
       custom_loop();
+      telemetry.update();
       if (loopBroken) {
         break;
       }
+      idle();
     }
   }
 

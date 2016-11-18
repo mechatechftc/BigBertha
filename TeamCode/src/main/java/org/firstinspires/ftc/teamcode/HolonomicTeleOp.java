@@ -38,7 +38,7 @@ public class HolonomicTeleOp extends HolonomicRobot {
   private DcMotorPair shooterMotors;
   private DcMotor conveyorMotor;
   private DcMotor sweeperMotor;
-  private Servo pusherLeft;
+  private Servo pusherRight;
 
   @Override
   public void init() {
@@ -58,9 +58,9 @@ public class HolonomicTeleOp extends HolonomicRobot {
 
     conveyorMotor = hardwareMap.dcMotor.get("conveyor");
     sweeperMotor = hardwareMap.dcMotor.get("sweeper");
-    pusherLeft = hardwareMap.servo.get("pusher_r");
+    pusherRight = hardwareMap.servo.get("pusher_r");
 
-    sensorRGB = hardwareMap.colorSensor.get("sensor_l");
+    sensorRGB = hardwareMap.colorSensor.get("sensor_r");
 
     super.init();
   }
@@ -102,9 +102,9 @@ public class HolonomicTeleOp extends HolonomicRobot {
       }
 
       if (gamepad2.x) {
-        pusherLeft.setPosition(0.3);
+        pusherRight.setPosition(-0.05);
       } else {
-        pusherLeft.setPosition(-0.3);
+        pusherRight.setPosition(0.05);
       }
 
       conveyorMotor.setPower(Range.clip(gamepad2LTrigger, 0, 1));
@@ -128,5 +128,17 @@ public class HolonomicTeleOp extends HolonomicRobot {
 
     }
   }
+
+  @Override
+  public void stop() {
+    relativeLayout.post(new Runnable() {
+      public void run() {
+        relativeLayout.setBackgroundColor(Color.WHITE);
+      }
+    });
+    super.stop();
+  }
+
+
 }
 
