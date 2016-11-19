@@ -17,6 +17,7 @@ import java.io.StringWriter;
 
 /**
  * Created by Richik SC on 10/29/2016.
+ * Super Nimble Oversized Nerf Gun on Wheels
  */
 
 @TeleOp(name = "OmniWheel Drive TeleOp - Velocity Vortex", group = "Comp")
@@ -64,7 +65,8 @@ public class HolonomicTeleOp extends HolonomicRobot {
     pusherLeft = hardwareMap.servo.get("pusher_l");
     pusherRight.setDirection(Servo.Direction.REVERSE);
 
-    pusherRight.setPosition(-0.025);
+    pusherRight.setPosition(-0.03);
+    pusherLeft.setPosition(-0.3);
 
     sensorRGB = hardwareMap.colorSensor.get("sensor_r");
 
@@ -101,23 +103,27 @@ public class HolonomicTeleOp extends HolonomicRobot {
       telemetry.addData("Blue ", sensorRGB.blue());
 
       if (gamepad2AButton) {
-        sweeperMotor.setPower(1);
+        sweeperMotor.setPower(0.75);
       } else if (gamepad2BButton) {
-        sweeperMotor.setPower(-1);
+        if(gamepad2.right_bumper) {
+          sweeperMotor.setPower(-1);
+        } else {
+          sweeperMotor.setPower(-0.75);
+        }
       } else {
         sweeperMotor.setPower(0);
       }
 
       if (gp2x) {
-        pusherRight.setPosition(0);
+        pusherRight.setPosition(0.1);
       } else {
-        pusherRight.setPosition(-0.05);
+        pusherRight.setPosition(-0.3);
       }
 
       if (gamepad2.y) {
-        pusherLeft.setPosition(0);
+        pusherLeft.setPosition(0.2);
       } else {
-        pusherLeft.setPosition(-0.05);
+        pusherLeft.setPosition(-0.1);
       }
 
       conveyorMotor.setPower(Range.clip(gamepad2LTrigger, 0, 1));

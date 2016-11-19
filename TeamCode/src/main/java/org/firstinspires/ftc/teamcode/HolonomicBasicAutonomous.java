@@ -7,8 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.HolonomicAutonomous;
-
 import java.util.Locale;
 
 /**
@@ -106,16 +104,17 @@ public class HolonomicBasicAutonomous extends LinearOpMode {
       drive(0, 1, 0);
       sleep(1000);
       while (
-          ((sensorR.red() - sensorR.green()) < 800) &&
-          ((sensorR.red() - sensorR.blue()) < 800)
+          ((sensorR.red() - sensorR.green()) >= 100) &&
+          ((sensorR.red() - sensorR.blue()) >= 100)
       ) {
-        drive(0, 1, 0);
-        sleep(150);
-        idle();
+        drive(0, 0.5F, 0);
       }
-      pusherRight.setPosition(0);
+      setPowerZero();
+      pusherRight.setPosition(0.2);
+      sleep(2000);
       idle();
       pusherRight.setPosition(-0.05);
+      idle();
       break;
     }
     setPowerZero();
