@@ -39,6 +39,7 @@ public class HolonomicTeleOp extends HolonomicRobot {
   private DcMotor conveyorMotor;
   private DcMotor sweeperMotor;
   private Servo pusherRight;
+  private Servo pusherLeft;
 
   @Override
   public void init() {
@@ -58,7 +59,12 @@ public class HolonomicTeleOp extends HolonomicRobot {
 
     conveyorMotor = hardwareMap.dcMotor.get("conveyor");
     sweeperMotor = hardwareMap.dcMotor.get("sweeper");
+
     pusherRight = hardwareMap.servo.get("pusher_r");
+    pusherLeft = hardwareMap.servo.get("pusher_l");
+    pusherRight.setDirection(Servo.Direction.REVERSE);
+
+    pusherRight.setPosition(-0.025);
 
     sensorRGB = hardwareMap.colorSensor.get("sensor_r");
 
@@ -76,6 +82,7 @@ public class HolonomicTeleOp extends HolonomicRobot {
     gamepad2LTrigger = gamepad2.left_trigger;
     gamepad2AButton = gamepad2.a;
     gamepad2BButton = gamepad2.b;
+    boolean gp2x = gamepad2.x;
 
 
     // Proper exception handling, FTC does not show full stack trace
@@ -101,10 +108,16 @@ public class HolonomicTeleOp extends HolonomicRobot {
         sweeperMotor.setPower(0);
       }
 
-      if (gamepad2.x) {
-        pusherRight.setPosition(-0.05);
+      if (gp2x) {
+        pusherRight.setPosition(0);
       } else {
-        pusherRight.setPosition(0.05);
+        pusherRight.setPosition(-0.05);
+      }
+
+      if (gamepad2.y) {
+        pusherLeft.setPosition(0);
+      } else {
+        pusherLeft.setPosition(-0.05);
       }
 
       conveyorMotor.setPower(Range.clip(gamepad2LTrigger, 0, 1));
