@@ -1,19 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
-
-import java.util.Locale;
 
 /**
  * Created by Richik SC on 10/29/2016.
  */
 
 @Autonomous(name = "OmniWheel Autonomous - Velocity Vortex", group = "Comp")
+@Disabled
 public class HolonomicAutonomous extends LinearOpMode {
 
   private static final double WHEEL_DIAMETER = 3.96;
@@ -74,6 +72,7 @@ public class HolonomicAutonomous extends LinearOpMode {
     xVal = x;
     yVal = y;
     rotVal = rotation;
+
     // Holonomic formulas
 
     frontLeft = -yVal - xVal - rotVal;
