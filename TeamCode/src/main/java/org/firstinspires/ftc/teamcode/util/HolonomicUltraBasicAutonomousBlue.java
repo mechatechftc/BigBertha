@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.util;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -10,20 +10,20 @@ import com.qualcomm.robotcore.util.Range;
 import java.util.Locale;
 
 /**
- * Created by Richik SC on 11/18/2016.
+ * Created by Richik SC on 11/20/2016.
  */
 
-@Autonomous(name = "SuperBasic", group = "Comp")
-public class HolonomicBasicAutonomous extends LinearOpMode {
-
+@Autonomous(name = "Basic Autonomous", group = "Comp")
+public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
   private DcMotor motorFL;
   private DcMotor motorFR;
   private DcMotor motorBL;
   private DcMotor motorBR;
+  private DcMotorPair shooterMotors;
+  private DcMotor conveyorMotor;
 
   private Servo pusherRight;
 
-  private ColorSensor sensorR;
 
   public void custom_init() {
 
@@ -46,7 +46,12 @@ public class HolonomicBasicAutonomous extends LinearOpMode {
     pusherRight.setDirection(Servo.Direction.REVERSE);
     pusherRight.setPosition(-0.05);
 
-    sensorR = hardwareMap.colorSensor.get("sensor_r");
+    shooterMotors = new DcMotorPair(
+        hardwareMap.dcMotor.get("shooter_l"),
+        hardwareMap.dcMotor.get("shooter_r")
+    );
+
+    conveyorMotor = hardwareMap.dcMotor.get("conveyor");
 
     telemetry.addData("Status", "Initialized");
 
@@ -95,28 +100,18 @@ public class HolonomicBasicAutonomous extends LinearOpMode {
   public void runOpMode() throws InterruptedException {
     custom_init();
     waitForStart();
-    while (opModeIsActive()) {
-      drive(1,1,0);
-      if(!opModeIsActive()) {
-        break;
-      }
-      sleep(2000);
-      drive(0, 1, 0);
-      sleep(1000);
-      while (
-          ((sensorR.red() - sensorR.green()) >= 100) &&
-          ((sensorR.red() - sensorR.blue()) >= 100)
-      ) {
-        drive(0, 0.5F, 0);
-      }
-      setPowerZero();
-      pusherRight.setPosition(0.2);
-      sleep(2000);
-      idle();
-      pusherRight.setPosition(-0.05);
-      idle();
-      break;
-    }
+    shooterMotors.setPower(1);
+    sleep(2000);
+    drive(0, -1, 0);
+    sleep(700);
+    setPowerZero();
+    conveyorMotor.setPower(0.8);
+    sleep(2000);
+    setPowerZero();
+    shooterMotors.setPower(0);
+    conveyorMotor.setPower(0);
+    drive(0, -1, 0);
+    sleep(1300);
     setPowerZero();
   }
 }

@@ -22,6 +22,12 @@ import java.io.StringWriter;
 
 @TeleOp(name = "OmniWheel Drive TeleOp - Velocity Vortex", group = "Comp")
 public class HolonomicTeleOp extends HolonomicRobot {
+
+  private static final int TARGET_ROTATIONS_PER_SECOND = 25; // 1500 RPM / 60
+  private static final int PULSES_PER_REVOLUTION = 28; // 7 ppr encoders with a 4:1 gear reduction
+  private static final int TARGET_PULSES_PER_SECOND =
+      TARGET_ROTATIONS_PER_SECOND * PULSES_PER_REVOLUTION;
+
   // Left stick controls direction
   // Right stick X controls rotation
   private float gamepad1LeftY;
@@ -31,16 +37,11 @@ public class HolonomicTeleOp extends HolonomicRobot {
   private float gamepad2LTrigger;
   private boolean gamepad2AButton;
   private boolean gamepad2BButton;
+
   private ColorSensor sensorRGB;
   private float hsvValues[] = {0F, 0F, 0F};
   private float values[] = hsvValues;
   private View relativeLayout;
-
-  private DcMotorPair shooterMotors;
-  private DcMotor conveyorMotor;
-  private DcMotor sweeperMotor;
-  private Servo pusherRight;
-  private Servo pusherLeft;
 
   @Override
   public void init() {
@@ -49,28 +50,18 @@ public class HolonomicTeleOp extends HolonomicRobot {
     relativeLayout = ((Activity) hardwareMap.appContext)
         .findViewById(com.qualcomm.ftcrobotcontroller.R.id.RelativeLayout);
 
-    // Use custom DcMotorPair class here to prevent any mistakes
-    shooterMotors = new DcMotorPair(
-        hardwareMap.dcMotor.get("shooter_l"),
-        hardwareMap.dcMotor.get("shooter_r")
-    );
-    /* Shooter motors are reversed physically by reversing the polarity of the wires
-    No need to reverse in code, otherwise use:
-    shooterMotors.setReverse(true, false); */
-
-    conveyorMotor = hardwareMap.dcMotor.get("conveyor");
-    sweeperMotor = hardwareMap.dcMotor.get("sweeper");
-
-    pusherRight = hardwareMap.servo.get("pusher_r");
-    pusherLeft = hardwareMap.servo.get("pusher_l");
-    pusherRight.setDirection(Servo.Direction.REVERSE);
-
-    pusherRight.setPosition(-0.03);
-    pusherLeft.setPosition(-0.3);
+    super.init();
 
     sensorRGB = hardwareMap.colorSensor.get("sensor_r");
 
-    super.init();
+    pusherRight.setPosition(0.1);
+    pusherLeft.setPosition(-0.1);
+
+    shooterMotors.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    shooterMotors.setMaxSpeed(TARGET_PULSES_PER_SECOND);
+
+    telemetry.addData("Status", "Initialized");
+
   }
 
   @Override
@@ -115,7 +106,7 @@ public class HolonomicTeleOp extends HolonomicRobot {
       }
 
       if (gp2x) {
-        pusherRight.setPosition(0.1);
+        pusherRight.setPosition(0.3);
       } else {
         pusherRight.setPosition(-0.3);
       }
@@ -123,10 +114,14 @@ public class HolonomicTeleOp extends HolonomicRobot {
       if (gamepad2.y) {
         pusherLeft.setPosition(0.2);
       } else {
-        pusherLeft.setPosition(-0.1);
+        pusherLeft.setPosition(0.05);
       }
 
-      conveyorMotor.setPower(Range.clip(gamepad2LTrigger, 0, 1));
+      if(gamepad2.left_bumper) {
+        conveyorMotor.setPower(-0.5);
+      } else {
+        conveyorMotor.setPower(Range.clip(gamepad2LTrigger, 0, 1));
+      }
       shooterMotors.setPower(Range.clip(gamepad2RTrigger, 0, 1));
       drive(gamepad1LeftX, gamepad1LeftY, gamepad1RightX);
 

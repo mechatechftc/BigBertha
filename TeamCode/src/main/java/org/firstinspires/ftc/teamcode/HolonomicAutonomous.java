@@ -4,14 +4,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * Created by Richik SC on 10/29/2016.
+ * Created by Richik SC on 10/29/2016 for MechaTech Robotics - FTC 10617
  */
 
 @Autonomous(name = "OmniWheel Autonomous - Velocity Vortex", group = "Comp")
-@Disabled
 public class HolonomicAutonomous extends LinearOpMode {
 
   private static final double WHEEL_DIAMETER = 3.96;
@@ -23,6 +23,8 @@ public class HolonomicAutonomous extends LinearOpMode {
   protected DcMotor motorFR;
   protected DcMotor motorBL;
   protected DcMotor motorBR;
+
+  private OpticalDistanceSensor ods;
 
   private float xVal;
   private float yVal;
@@ -53,10 +55,10 @@ public class HolonomicAutonomous extends LinearOpMode {
       telemetry.addLine("Encoders did not reset fully");
       requestOpModeStop();
     }
-    motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorBL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorBR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    motorFL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    motorFR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    motorBL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    motorBR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
     desiredTicks = 0;
   }
@@ -98,6 +100,8 @@ public class HolonomicAutonomous extends LinearOpMode {
     motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+    ods = hardwareMap.opticalDistanceSensor.get("ods");
+
     resetEncoders();
     state = States.DRIVE_FORWARD_1;
 
@@ -125,8 +129,8 @@ public class HolonomicAutonomous extends LinearOpMode {
 //        telemetry.addData("Desired Ticks", desiredTicks);
 //        telemetry.addData("Motor FL - Current Position", motorFLCurrPos);
 //        telemetry.addData("Difference", (desiredTicks - motorFLCurrPos));
-        telemetry.addData("moterFL ", motorFL.getCurrentPosition());
-        telemetry.addData("moterFR ", motorFR.getCurrentPosition());
+        telemetry.addData("motorFL ", motorFL.getCurrentPosition());
+        telemetry.addData("motorFR ", motorFR.getCurrentPosition());
         telemetry.addData("motorBL ", motorBL.getCurrentPosition());
         telemetry.addData("motorBR ", motorBR.getCurrentPosition());
         telemetry.update();
@@ -153,7 +157,7 @@ public class HolonomicAutonomous extends LinearOpMode {
         break;
     }
 
-    //applyDrive();
+    // applyDrive();
 
   }
 
@@ -176,6 +180,7 @@ public class HolonomicAutonomous extends LinearOpMode {
             (long)backRight
         )
     );*/
+    telemetry.addData("odsSensorLightDetected", ods.getLightDetected());
     telemetry.update();
     // Write the values to the motors
 

@@ -4,7 +4,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.util.DcMotorPair;
 
 import java.util.Locale;
 
@@ -20,6 +23,12 @@ public class HolonomicRobot extends OpMode {
   protected DcMotor motorFR;
   protected DcMotor motorBL;
   protected DcMotor motorBR;
+
+  protected DcMotorPair shooterMotors;
+  protected DcMotor conveyorMotor;
+  protected DcMotor sweeperMotor;
+  protected Servo pusherRight;
+  protected Servo pusherLeft;
 
   private float xVal;
   private float yVal;
@@ -48,7 +57,21 @@ public class HolonomicRobot extends OpMode {
     motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-    telemetry.addData("Status", "Initialized");
+    // Use custom DcMotorPair class here to prevent any mistakes
+    shooterMotors = new DcMotorPair(
+        hardwareMap.dcMotor.get("shooter_l"),
+        hardwareMap.dcMotor.get("shooter_r")
+    );
+    /* Shooter motors are reversed physically by reversing the polarity of the wires
+    No need to reverse in code, otherwise use:
+    shooterMotors.setReverse(true, false); */
+
+    conveyorMotor = hardwareMap.dcMotor.get("conveyor");
+    sweeperMotor = hardwareMap.dcMotor.get("sweeper");
+
+    pusherRight = hardwareMap.servo.get("pusher_r");
+    pusherLeft = hardwareMap.servo.get("pusher_l");
+    pusherRight.setDirection(Servo.Direction.REVERSE);
 
   }
 
