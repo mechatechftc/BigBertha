@@ -27,8 +27,6 @@ public class HolonomicRobot extends OpMode {
   protected DcMotorPair shooterMotors;
   protected DcMotor conveyorMotor;
   protected DcMotor sweeperMotor;
-  protected Servo pusherRight;
-  protected Servo pusherLeft;
 
   private float xVal;
   private float yVal;
@@ -68,10 +66,6 @@ public class HolonomicRobot extends OpMode {
 
     conveyorMotor = hardwareMap.dcMotor.get("conveyor");
     sweeperMotor = hardwareMap.dcMotor.get("sweeper");
-
-    pusherRight = hardwareMap.servo.get("pusher_r");
-    pusherLeft = hardwareMap.servo.get("pusher_l");
-    pusherRight.setDirection(Servo.Direction.REVERSE);
 
   }
 

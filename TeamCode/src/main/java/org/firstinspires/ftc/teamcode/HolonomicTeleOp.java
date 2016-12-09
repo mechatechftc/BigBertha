@@ -33,34 +33,29 @@ public class HolonomicTeleOp extends HolonomicRobot {
   private float gamepad1LeftY;
   private float gamepad1LeftX;
   private float gamepad1RightX;
+
+  // Peripheral controls
   private float gamepad2RTrigger;
   private float gamepad2LTrigger;
   private boolean gamepad2AButton;
   private boolean gamepad2BButton;
 
-  private ColorSensor sensorRGB;
-  private float hsvValues[] = {0F, 0F, 0F};
-  private float values[] = hsvValues;
-  private View relativeLayout;
 
   @Override
   public void init() {
     // Instantiate all objects
 
-    relativeLayout = ((Activity) hardwareMap.appContext)
-        .findViewById(com.qualcomm.ftcrobotcontroller.R.id.RelativeLayout);
-
     super.init();
 
-    sensorRGB = hardwareMap.colorSensor.get("sensor_r");
-
-    pusherRight.setPosition(0.1);
-    pusherLeft.setPosition(-0.1);
-
     shooterMotors.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    shooterMotors.setMaxSpeed(TARGET_PULSES_PER_SECOND);
+    shooterMotors.getMotor1().setMaxSpeed(TARGET_PULSES_PER_SECOND);
+    shooterMotors.getMotor2().setMaxSpeed(TARGET_PULSES_PER_SECOND);
+    telemetry.addData("speed 1",  shooterMotors.getMotor1().getMaxSpeed());
+    telemetry.addData("speed 2",  shooterMotors.getMotor2().getMaxSpeed());
 
+    telemetry.addData("tpps", TARGET_PULSES_PER_SECOND);
     telemetry.addData("Status", "Initialized");
+    telemetry.update();
 
   }
 
@@ -81,18 +76,6 @@ public class HolonomicTeleOp extends HolonomicRobot {
     // Proper exception handling, FTC does not show full stack trace
     try {
 
-      Color.RGBToHSV(
-          (sensorRGB.red() * 255) / 800,
-          (sensorRGB.green() * 255) / 800,
-          (sensorRGB.blue() * 255) / 800,
-          hsvValues
-      );
-
-      telemetry.addData("Clear", sensorRGB.alpha());
-      telemetry.addData("Red  ", sensorRGB.red());
-      telemetry.addData("Green", sensorRGB.green());
-      telemetry.addData("Blue ", sensorRGB.blue());
-
       if (gamepad2AButton) {
         sweeperMotor.setPower(0.75);
       } else if (gamepad2BButton) {
@@ -105,18 +88,6 @@ public class HolonomicTeleOp extends HolonomicRobot {
         sweeperMotor.setPower(0);
       }
 
-      if (gp2x) {
-        pusherRight.setPosition(0.3);
-      } else {
-        pusherRight.setPosition(-0.3);
-      }
-
-      if (gamepad2.y) {
-        pusherLeft.setPosition(0.2);
-      } else {
-        pusherLeft.setPosition(0.05);
-      }
-
       if(gamepad2.left_bumper) {
         conveyorMotor.setPower(-0.5);
       } else {
@@ -125,11 +96,9 @@ public class HolonomicTeleOp extends HolonomicRobot {
       shooterMotors.setPower(Range.clip(gamepad2RTrigger, 0, 1));
       drive(gamepad1LeftX, gamepad1LeftY, gamepad1RightX);
 
-      relativeLayout.post(new Runnable() {
-        public void run() {
-          relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
-        }
-      });
+      telemetry.addData("GetMotor1 getPower", shooterMotors.getMotor1().getPower());
+      telemetry.addData("GetMotor2 getPower", shooterMotors.getMotor2().getPower());
+      telemetry.update();
 
       super.loop();
     } catch (Exception ex) {
@@ -145,11 +114,6 @@ public class HolonomicTeleOp extends HolonomicRobot {
 
   @Override
   public void stop() {
-    relativeLayout.post(new Runnable() {
-      public void run() {
-        relativeLayout.setBackgroundColor(Color.WHITE);
-      }
-    });
     super.stop();
   }
 

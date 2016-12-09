@@ -44,10 +44,10 @@ public class DcMotorPair {
     return runModes;
   }
 
-  public void setMaxSpeed(int encoderTicksPerSecond1, int encoderTicksPerSecond2) {
+  /*public void setMaxSpeed(int encoderTicksPerSecond1, int encoderTicksPerSecond2) {
     dcMotor1.setMaxSpeed(encoderTicksPerSecond1);
     dcMotor2.setMaxSpeed(encoderTicksPerSecond2);
-  }
+  }*/
 
   public void setMaxSpeed(int encoderTicksPerSecond) {
     dcMotor1.setMaxSpeed(encoderTicksPerSecond);

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,6 +16,7 @@ import java.util.Locale;
  */
 
 @Autonomous(name = "Beacons Blue", group = "Comp")
+@Disabled
 public class HolonomicBasicAutonomousBlue extends LinearOpMode {
 
   private DcMotor motorFL;
@@ -103,11 +105,6 @@ public class HolonomicBasicAutonomousBlue extends LinearOpMode {
     custom_init();
     waitForStart();
     while (opModeIsActive()) {
-      drive(0.2F, 0.2F, 0);
-      if(!opModeIsActive()) {
-        break;
-      }
-      sleep(2900);
       setPowerZero();
       sleep(1000);
       while (gyro.getIntegratedZValue() < zAngle) {
