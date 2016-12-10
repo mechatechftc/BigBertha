@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.util.Range;
@@ -25,6 +26,7 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
       DRIVE_GEAR_REDUCTION) /
       (WHEEL_DIAMETER_INCHES * 3.1415);
   public static final double OPTICAL_WHITE_VAL_THRESHOLD = 0.2;
+  public static final int RGB_THRESHOLD = 200;
 
   // Main drive motors
   private DcMotor motorFL;
@@ -37,11 +39,9 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
   private DcMotor conveyorMotor;
 
   // Sensors
-  OpticalDistanceSensor ods;
-
-  ModernRoboticsI2cGyro gyro;
-
-  double initialGyroValue;
+  private OpticalDistanceSensor ods;
+  private ColorSensor rgb;
+  private ModernRoboticsI2cGyro gyro;
 
   private int newTargetFL;
   private int newTargetFR;
@@ -77,6 +77,7 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
     gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
     gyro.calibrate();
     telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");
+    rgb = hardwareMap.colorSensor.get("rgb_sensor");
     idle();
 
     resetEncoders();
@@ -175,12 +176,13 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
 
     telemetry.addData("Gyro", "Calibrated");
 
-    initialGyroValue = gyro.getIntegratedZValue();
+    double initialGyroValue = gyro.getIntegratedZValue();
 
     // Shoot two balls
-    shootTwoBalls();
+    //shootTwoBalls();
+
     // Now, move diagonally 58 inches
-    moveDiagonal(58);
+   // moveDiagonal(58);
 
     motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -194,12 +196,34 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
     // now try to move to the white line
     driveByOpticalSensor();
 
-    //driveToBeacon();
+    if (strafeToBeacon()) { // found Red beacon
+      // clear to push beacon
+      telemetry.addData("Red Beacon", "Found");
+      telemetry.update();
+      pushBeacon();
+
+    } else {
+      telemetry.addData("Red Beacon", "NotFound");
+      telemetry.update();
+      //move 6" vertically and then push
+      moveVertical(6);
+      pushBeacon();
+
+    }
 
     // Stop all motion
     setPowerZero();
     resetEncoders();
 
+  }
+
+  private void pushBeacon() {
+    // move the robot 4" simulating beacon push
+    telemetry.addData("Red Beacon", "Pushing");
+    telemetry.update();
+    moveHorizontal(3);
+    sleep(2000);
+    moveHorizontal(-3);
   }
 
   private void driveByGyro(float driveSpeed, double gyroTargetValue) {
@@ -212,37 +236,34 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
     }
   }
 
-  private void driveToBeacon() {
-    resetEncoders();
-    newTargetFL = calculateTargetTicks(-3.0);
-    newTargetFR = calculateTargetTicks(-3.0);
-    newTargetBL = calculateTargetTicks(3.0);
-    newTargetBR = calculateTargetTicks(3.0);
-
-    drive(0.5F, 0, 0);
-    // keep looping while we are still active, and there is time left, and both motors are running.
-    while (opModeIsActive() &&
-        (motorFL.isBusy() && motorFR.isBusy() && motorBL.isBusy() && motorBR.isBusy())) {
-
-      // Display it for the driver.
-      telemetry.addData("Path1",  "Running to %7d :%7d, %7d :%7d", newTargetFL, newTargetFR,
-          newTargetBL, newTargetBR);
-      telemetry.addData("Path2",  "Running at %7d :%7d, %7d :%7d",
-          motorFL.getCurrentPosition(),
-          motorFR.getCurrentPosition(),
-          motorBL.getCurrentPosition(),
-          motorBR.getCurrentPosition());
+  private boolean strafeToBeacon() {
+    boolean pushIt = false;
+    while (rgb.alpha() < RGB_THRESHOLD) {
+      drive(-0.1f, 0, 0);
+      telemetry.addData("Clear", rgb.alpha());
+      telemetry.addData("Red  ", rgb.red());
+      telemetry.addData("Blue", rgb.blue());
       telemetry.update();
-
+      idle();
     }
+    setPowerZero();
+    idle();
+
+    if(rgb.blue() > rgb.red()) {
+      telemetry.addData("Blue is winning", "Blue: %d, Red: %d", rgb.blue(), rgb.red());
+      telemetry.update();
+      // d
+    } else {
+      telemetry.addData("Red is winning", "Blue: %d, Red: %d", rgb.blue(), rgb.red());
+      telemetry.update();
+      pushIt = true;
+    }
+    sleep(2000);
+    return pushIt;
   }
 
+
   private void driveByOpticalSensor() {
-    motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorBL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorBR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    idle();
 
     while (opModeIsActive() && ods.getLightDetected() < OPTICAL_WHITE_VAL_THRESHOLD) {
 
@@ -265,6 +286,74 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
       shooterMotors.setPower(0);
       conveyorMotor.setPower(0);
       //setPowerZero();
+    }
+  }
+
+  private void moveVertical(double dist) {
+    resetEncoders();
+    if (opModeIsActive()) {
+      int ticks = calculateTargetTicks(dist);
+      motorFL.setTargetPosition(ticks);
+      motorFR.setTargetPosition(-1*ticks);
+      motorBL.setTargetPosition(ticks);
+      motorBR.setTargetPosition(-1*ticks);
+
+      if(dist > 0)
+        drive(0, 0.1f, 0);
+      else
+        drive(0, -0.1f, 0);
+      // keep looping while we are still active, and there is time left, and both motors are running.
+      while (opModeIsActive() &&
+          (motorBL.isBusy() && motorFR.isBusy())) {
+
+        // Display it for the driver.
+        telemetry.addData("Path1", "Running to %7d", ticks);
+        telemetry.addData("Path2", "Running at %7d :%7d :%7d :%7d",
+            motorFL.getCurrentPosition(),
+            motorFR.getCurrentPosition(),
+            motorBL.getCurrentPosition(),
+            motorBR.getCurrentPosition()
+            );
+        telemetry.update();
+
+
+      }
+      setPowerZero();
+      resetEncoders();
+    }
+  }
+
+  private void moveHorizontal(double dist) {
+    resetEncoders();
+    if (opModeIsActive()) {
+      int ticks = calculateTargetTicks(dist);
+      motorFL.setTargetPosition(ticks);
+      motorFR.setTargetPosition(ticks);
+      motorBL.setTargetPosition(-1*ticks);
+      motorBR.setTargetPosition(-1*ticks);
+
+      if(dist > 0)
+        drive(0.1f, 0, 0);
+      else
+        drive(-0.1f, 0, 0);
+      // keep looping while we are still active, and there is time left, and both motors are running.
+      while (opModeIsActive() &&
+          (motorBL.isBusy() && motorFR.isBusy())) {
+
+        // Display it for the driver.
+        telemetry.addData("Path1", "Running to %7d", ticks);
+        telemetry.addData("Path2", "Running at %7d :%7d :%7d :%7d",
+            motorFL.getCurrentPosition(),
+            motorFR.getCurrentPosition(),
+            motorBL.getCurrentPosition(),
+            motorBR.getCurrentPosition()
+        );
+        telemetry.update();
+
+
+      }
+      setPowerZero();
+      resetEncoders();
     }
   }
 

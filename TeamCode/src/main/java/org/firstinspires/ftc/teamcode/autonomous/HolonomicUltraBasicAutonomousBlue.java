@@ -26,7 +26,7 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
       DRIVE_GEAR_REDUCTION) /
       (WHEEL_DIAMETER_INCHES * 3.1415);
   public static final double OPTICAL_WHITE_VAL_THRESHOLD = 0.2;
-  public static final int RGB_BLUE_THRESHOLD = 300;
+  public static final int RGB_THRESHOLD = 200;
 
   // Main drive motors
   private DcMotor motorFL;
@@ -77,7 +77,7 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
     gyro.calibrate();
     telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");
-    rgb = hardwareMap.colorSensor.get("sensor_r");
+    rgb = hardwareMap.colorSensor.get("rgb_sensor");
     idle();
 
     resetEncoders();
@@ -179,10 +179,10 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     double initialGyroValue = gyro.getIntegratedZValue();
 
     // Shoot two balls
-    shootTwoBalls();
+    //shootTwoBalls();
 
     // Now, move diagonally 58 inches
-    moveDiagonal(58);
+   // moveDiagonal(58);
 
     motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -215,15 +215,28 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
   }
 
   private void strafeToBeacon() {
-    while (true) { ///rgb.blue() < RGB_BLUE_THRESHOLD) {
+    while (true )//rgb.alpha() < RGB_THRESHOLD) { ///rgb.blue() < RGB_BLUE_THRESHOLD) {
       //drive(0.1f, 0, 0);
+    {
+/*
       telemetry.addData("Clear", rgb.alpha());
       telemetry.addData("Red  ", rgb.red());
-      telemetry.addData("Green", rgb.green());
-      telemetry.addData("Blue ", rgb.blue());
+*/
+      telemetry.addData("rgb", rgb.blue());
       telemetry.update();
       idle();
+      sleep(1000);
     }
+
+    /*setPowerZero();
+
+    if(rgb.blue() > rgb.red()) {
+      telemetry.addData("Blue is winning", "Blue: %d, Red: %d", rgb.blue(), rgb.red());
+      telemetry.update();
+    } else {
+      telemetry.addData("Red is winning", "Blue: %d, Red: %d", rgb.blue(), rgb.red());
+    }
+*/
   }
 
   private void driveByOpticalSensor() {
