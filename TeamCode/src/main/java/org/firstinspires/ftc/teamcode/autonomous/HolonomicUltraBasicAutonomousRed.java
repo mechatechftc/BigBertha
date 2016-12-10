@@ -26,7 +26,7 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
       DRIVE_GEAR_REDUCTION) /
       (WHEEL_DIAMETER_INCHES * 3.1415);
   public static final double OPTICAL_WHITE_VAL_THRESHOLD = 0.2;
-  public static final int RGB_THRESHOLD = 200;
+  public static final int RGB_THRESHOLD = 300;
 
   // Main drive motors
   private DcMotor motorFL;
@@ -74,9 +74,9 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
     );
     conveyorMotor = hardwareMap.dcMotor.get("conveyor");
     ods = hardwareMap.opticalDistanceSensor.get("ods");
-    gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
+/*    gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
     gyro.calibrate();
-    telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");
+    telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");*/
     rgb = hardwareMap.colorSensor.get("rgb_sensor");
     idle();
 
@@ -168,7 +168,7 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
   public void runOpMode() throws InterruptedException {
     custom_init();
     waitForStart();
-    while (gyro.isCalibrating()) {
+/*    while (gyro.isCalibrating()) {
       telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");
       telemetry.update();
       sleep(100);
@@ -176,13 +176,15 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
 
     telemetry.addData("Gyro", "Calibrated");
 
-    double initialGyroValue = gyro.getIntegratedZValue();
+    double initialGyroValue = gyro.getIntegratedZValue();*/
 
     // Shoot two balls
-    //shootTwoBalls();
+    shootTwoBalls();
 
     // Now, move diagonally 58 inches
-   // moveDiagonal(58);
+    moveDiagonal(58);
+
+    moveHorizontal(7);
 
     motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -196,20 +198,10 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
     // now try to move to the white line
     driveByOpticalSensor();
 
-    if (strafeToBeacon()) { // found Red beacon
-      // clear to push beacon
-      telemetry.addData("Red Beacon", "Found");
-      telemetry.update();
-      pushBeacon();
+    getFirstBeacon();
 
-    } else {
-      telemetry.addData("Red Beacon", "NotFound");
-      telemetry.update();
-      //move 6" vertically and then push
-      moveVertical(6);
-      pushBeacon();
-
-    }
+    // Go to next beacon
+    getSecondBeacon();
 
     // Stop all motion
     setPowerZero();
@@ -217,13 +209,68 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
 
   }
 
-  private void pushBeacon() {
+  private void getSecondBeacon() {
+    moveVertical(-25);
+    telemetry.addData("2nd B moveVertical", "Complete");
+    telemetry.update();
+    motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    motorBL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    motorBR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    idle();
+    driveByOpticalSensor();
+
+    // Push second beacon
+    if (strafeToBeacon()) { // found Red beacon
+      // clear to push beacon
+      telemetry.addData("Red Beacon", "Found");
+      telemetry.update();
+      moveVertical(-1);
+      pushBeacon(3);
+
+    } else {
+      telemetry.addData("Red Beacon", "NotFound");
+      telemetry.update();
+      //move 6" vertically and then push
+      moveVertical(-5);
+      pushBeacon(3);
+    }
+  }
+
+  private void getFirstBeacon() {
+    if (strafeToBeacon()) { // found Red beacon
+      // clear to push beacon
+      telemetry.addData("Red Beacon", "Found");
+      telemetry.update();
+      pushBeacon(3);
+
+    } else {
+      telemetry.addData("Red Beacon", "NotFound");
+      telemetry.update();
+      //move 6" vertically and then push
+      moveVertical(-5);
+      pushBeacon(3);
+    }
+  }
+
+  private void  pushBeacon(double byHowMuch) {
     // move the robot 4" simulating beacon push
+
+    /*if(rgb.red() < rgb.blue()) {
+      //do nothing
+      return;
+    }*/
     telemetry.addData("Red Beacon", "Pushing");
     telemetry.update();
-    moveHorizontal(3);
-    sleep(2000);
-    moveHorizontal(-3);
+    moveHorizontal(byHowMuch);
+    idle();
+    sleep(200);
+    telemetry.addData("Red Beacon", "Retreating");
+    telemetry.update();
+    moveHorizontal(-5);
+    idle();
+    telemetry.addData("Red Beacon", "Retreated");
+    telemetry.update();
   }
 
   private void driveByGyro(float driveSpeed, double gyroTargetValue) {
@@ -258,7 +305,7 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
       telemetry.update();
       pushIt = true;
     }
-    sleep(2000);
+    sleep(200);
     return pushIt;
   }
 
@@ -277,7 +324,7 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
       // Shoot two balls block
 
       // Warm up 'Big Bertha' (shooter motors)
-      shooterMotors.setPower(0.6);
+      shooterMotors.setPower(0.45);
       sleep(2000);
       //setPowerZero();
       conveyorMotor.setPower(0.8);
@@ -332,10 +379,14 @@ public class HolonomicUltraBasicAutonomousRed extends LinearOpMode {
       motorBL.setTargetPosition(-1*ticks);
       motorBR.setTargetPosition(-1*ticks);
 
-      if(dist > 0)
+      if(dist > 0) {
         drive(0.1f, 0, 0);
-      else
+
+      }
+      else {
         drive(-0.1f, 0, 0);
+        telemetry.addData("Else Horizontal", "Negative");
+      }
       // keep looping while we are still active, and there is time left, and both motors are running.
       while (opModeIsActive() &&
           (motorBL.isBusy() && motorFR.isBusy())) {
