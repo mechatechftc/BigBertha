@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.util.Range;
@@ -15,7 +16,7 @@ import java.util.Locale;
  * Created by Richik SC on 11/20/2016.
  */
 
-@Autonomous(name = "Basic Autonomous", group = "Comp")
+@Autonomous(name = "Basic Autonomous Blue", group = "Comp")
 public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
 
   private static final int PULSES_PER_MOTOR_REV = 28;
@@ -24,7 +25,8 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
   private static final double     PULSES_PER_INCH         = (PULSES_PER_MOTOR_REV *
       DRIVE_GEAR_REDUCTION) /
       (WHEEL_DIAMETER_INCHES * 3.1415);
-  public static final double OPTICAL_WHITE_VAL_THRESHOLD = 0.3;
+  public static final double OPTICAL_WHITE_VAL_THRESHOLD = 0.2;
+  public static final int RGB_BLUE_THRESHOLD = 300;
 
   // Main drive motors
   private DcMotor motorFL;
@@ -37,11 +39,9 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
   private DcMotor conveyorMotor;
 
   // Sensors
-  OpticalDistanceSensor ods;
-
-  ModernRoboticsI2cGyro gyro;
-
-  double initialGyroValue;
+  private OpticalDistanceSensor ods;
+  private ColorSensor rgb;
+  private ModernRoboticsI2cGyro gyro;
 
   private int newTargetFL;
   private int newTargetFR;
@@ -77,6 +77,7 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
     gyro.calibrate();
     telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");
+    rgb = hardwareMap.colorSensor.get("sensor_r");
     idle();
 
     resetEncoders();
@@ -170,15 +171,18 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     while (gyro.isCalibrating()) {
       telemetry.addData("Gyro", "Calibrating, DO NOT MOVE!");
       telemetry.update();
-      sleep(500);
+      sleep(100);
     }
 
-    initialGyroValue = gyro.getIntegratedZValue();
+    telemetry.addData("Gyro", "Calibrated");
 
-    //shootTwoBalls();
+    double initialGyroValue = gyro.getIntegratedZValue();
+
+    // Shoot two balls
+    shootTwoBalls();
+
     // Now, move diagonally 58 inches
     moveDiagonal(58);
-    setPowerZero();
 
     motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -187,12 +191,12 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     idle();
 
     // Now use gyro
-    driveByGyro(0.3f, initialGyroValue);
+    // driveByGyro(0.3f, initialGyroValue);
 
     // now try to move to the white line
-    //driveByOpticalSensor();
+    driveByOpticalSensor();
 
-    //driveToBeacon();
+    strafeToBeacon();
 
     // Stop all motion
     setPowerZero();
@@ -210,41 +214,23 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     }
   }
 
-  private void driveToBeacon() {
-    resetEncoders();
-    newTargetFL = calculateTargetTicks(-3.0);
-    newTargetFR = calculateTargetTicks(-3.0);
-    newTargetBL = calculateTargetTicks(3.0);
-    newTargetBR = calculateTargetTicks(3.0);
-
-    drive(0.5F, 0, 0);
-    // keep looping while we are still active, and there is time left, and both motors are running.
-    while (opModeIsActive() &&
-        (motorFL.isBusy() && motorFR.isBusy() && motorBL.isBusy() && motorBR.isBusy())) {
-
-      // Display it for the driver.
-      telemetry.addData("Path1",  "Running to %7d :%7d, %7d :%7d", newTargetFL, newTargetFR,
-          newTargetBL, newTargetBR);
-      telemetry.addData("Path2",  "Running at %7d :%7d, %7d :%7d",
-          motorFL.getCurrentPosition(),
-          motorFR.getCurrentPosition(),
-          motorBL.getCurrentPosition(),
-          motorBR.getCurrentPosition());
+  private void strafeToBeacon() {
+    while (true) { ///rgb.blue() < RGB_BLUE_THRESHOLD) {
+      //drive(0.1f, 0, 0);
+      telemetry.addData("Clear", rgb.alpha());
+      telemetry.addData("Red  ", rgb.red());
+      telemetry.addData("Green", rgb.green());
+      telemetry.addData("Blue ", rgb.blue());
       telemetry.update();
-
+      idle();
     }
   }
 
   private void driveByOpticalSensor() {
-    motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorBL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    motorBR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    idle();
 
     while (opModeIsActive() && ods.getLightDetected() < OPTICAL_WHITE_VAL_THRESHOLD) {
 
-      drive(0, 0.3f, 0);
+      drive(0, 0.15f, 0);
     }
     setPowerZero();
   }
@@ -254,7 +240,7 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
       // Shoot two balls block
 
       // Warm up 'Big Bertha' (shooter motors)
-      shooterMotors.setPower(0.9);
+      shooterMotors.setPower(0.6);
       sleep(2000);
       //setPowerZero();
       conveyorMotor.setPower(0.8);
@@ -275,7 +261,7 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
       motorFL.setTargetPosition(newTargetFL);
       motorBR.setTargetPosition(newTargetBR);
 
-      drive(0.5F, 0.5F, 0);
+      drive(0.25F, 0.25F, 0);
       // keep looping while we are still active, and there is time left, and both motors are running.
       while (opModeIsActive() &&
           (motorFL.isBusy() && motorBR.isBusy())) {
