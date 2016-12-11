@@ -184,7 +184,7 @@ public class HolonomicUltraBasicAutonomousBlue extends LinearOpMode {
     // Now, move diagonally 58 inches
     moveDiagonal(58);
 
-    moveHorizontal(-7);
+    moveHorizontal(-5);
 
     motorFL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     motorFR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
