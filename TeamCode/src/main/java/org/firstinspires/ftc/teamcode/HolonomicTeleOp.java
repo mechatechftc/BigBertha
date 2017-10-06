@@ -48,14 +48,14 @@ public class HolonomicTeleOp extends HolonomicRobot {
     super.init();
 
     shooterMotors.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    shooterMotors.getMotor1().setMaxSpeed(TARGET_PULSES_PER_SECOND);
+//
+    telemetry.addData("tpps", TARGET_PULSES_PER_SECOND);
+    telemetry.addData("Status", "Initialized");
+    /*telemetry.update(shooterMotors.getMotor1().setMaxSpeed(TARGET_PULSES_PER_SECOND);
     shooterMotors.getMotor2().setMaxSpeed(TARGET_PULSES_PER_SECOND);
     telemetry.addData("speed 1",  shooterMotors.getMotor1().getMaxSpeed());
     telemetry.addData("speed 2",  shooterMotors.getMotor2().getMaxSpeed());
-
-    telemetry.addData("tpps", TARGET_PULSES_PER_SECOND);
-    telemetry.addData("Status", "Initialized");
-    telemetry.update();
+    );*/
 
   }
 

@@ -49,9 +49,8 @@ public class DcMotorPair {
     dcMotor2.setMaxSpeed(encoderTicksPerSecond2);
   }*/
 
-  public void setMaxSpeed(int encoderTicksPerSecond) {
-    dcMotor1.setMaxSpeed(encoderTicksPerSecond);
-    dcMotor2.setMaxSpeed(encoderTicksPerSecond);
+  public void setMaxSpeed(int encoderTicksPerSecond) throws Exception {
+    throw new Exception("FTC DEPRECATED THIS!");
   }
 
   public DcMotor getMotor1() {
